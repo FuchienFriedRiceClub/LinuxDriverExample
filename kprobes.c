@@ -8,6 +8,10 @@ struct kretprobe lde_kretp_info[KPROBE_END_TAG];
 char kp_sym[KSYM_NAME_LEN] = "x64_sys_call";
 module_param_string(kp_sym, kp_sym, KSYM_NAME_LEN, 0644);
 
+// echo xxxx | sudo tee -a /sys/module/lde/parameters/kp_sym_offset
+int kp_sym_offset = 0x0;
+module_param(kp_sym_offset, int, 0644);
+
 void lde_kprobe_register(struct kprobe* kp_info)
 {
 	int ret;
@@ -46,12 +50,16 @@ void lde_kprobes_unregister(void)
 	do {
 		if (lde_kp_info[kpidx].addr) {
 			printk(KERN_INFO "will unregister kprobe [%s]\n", lde_kp_info[kpidx].symbol_name);
+
 			unregister_kprobe(&lde_kp_info[kpidx]);
+			lde_kp_info[kpidx].addr = NULL;
 		}
 
 		if (lde_kretp_info[kpidx].kp.addr) {
 			printk(KERN_INFO "will unregister kretprobe [%s]\n", lde_kretp_info[kpidx].kp.symbol_name);
+
 			unregister_kretprobe(&lde_kretp_info[kpidx]);
+			lde_kretp_info[kpidx].kp.addr = NULL;
 		}
 
 		kpidx++;

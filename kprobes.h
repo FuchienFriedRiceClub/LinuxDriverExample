@@ -6,6 +6,7 @@
 
 extern char kp_sym[KSYM_NAME_LEN];
 extern char retkp_sym[KSYM_NAME_LEN];
+extern int kp_sym_offset;
 
 typedef enum _kprobe_index {
 	STACK_KPROBE_INFO = 0,

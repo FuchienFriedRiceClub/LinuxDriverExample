@@ -23,11 +23,12 @@ typedef enum _kp_dump_mode {
 struct func_time {
 	ktime_t enter_stamp;
 };
+static char cur_sym[KSYM_NAME_LEN];
 
 static bool excepted_proc_check(void)
 {
 	if ((expected_pid == current->pid)
-	|| !strncmp(expected_pname, current->comm, COMM_MAX_LEN)) {
+	|| (strncmp(expected_pname, current->comm, COMM_MAX_LEN) == 0)) {
 		return true;
 	}
 
@@ -169,7 +170,8 @@ static int func_ret_handler(struct kretprobe_instance* krpi, struct pt_regs* reg
 		printk(KERN_INFO "%s returned 0x%lx and took %lld ns to execute\n"
 			"\treturn to address 0x%lx, frame = 0x%lx\n",
 			kp_sym, retval, (long long)delta,
-			(unsigned long)(krpi->node.ret_addr), (unsigned long)(krpi->node.frame));
+			(unsigned long)(krpi->node.ret_addr),
+			(unsigned long)(krpi->node.frame));
 		break;
 	default:
 		break;
@@ -182,16 +184,15 @@ void specified_func2stack_dump(void)
 {
 	lde_kprobes_unregister();
 
+	strncpy(cur_sym, kp_sym, KSYM_NAME_LEN);
 	current_bt_times = 0;
-	online_cpus_cnt_get();
-	cpus_cur_task_get();
 
-	lde_kp_info[STACK_KPROBE_INFO].symbol_name = kp_sym;
-	lde_kp_info[STACK_KPROBE_INFO].offset = 0x0;
+	lde_kp_info[STACK_KPROBE_INFO].symbol_name = cur_sym;
+	lde_kp_info[STACK_KPROBE_INFO].offset = kp_sym_offset;
 	lde_kp_info[STACK_KPROBE_INFO].pre_handler = stack_dump_by_kprobe_pre;
 	lde_kp_info[STACK_KPROBE_INFO].post_handler = stack_dump_by_kprobe_post;
 
-	lde_kretp_info[STACK_KPROBE_INFO].kp.symbol_name = kp_sym;
+	lde_kretp_info[STACK_KPROBE_INFO].kp.symbol_name = cur_sym;
 	lde_kretp_info[STACK_KPROBE_INFO].handler = func_ret_handler;
 	lde_kretp_info[STACK_KPROBE_INFO].entry_handler = func_entry_handler;
 	lde_kretp_info[STACK_KPROBE_INFO].data_size = sizeof(struct func_time);

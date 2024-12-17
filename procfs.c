@@ -17,9 +17,9 @@
 #define PROC_OPS_EXITS
 #endif
 
-#define MAX_CMDS_BUFFER_LEN			256
-#define MAX_SYSINFO_BUFFER_LEN		256
-#define MAX_RECEIVE_BUFFER_LEN		256
+#define MAX_CMDS_BUFFER_LEN			1024
+#define MAX_SYSINFO_BUFFER_LEN		1024
+#define MAX_RECEIVE_BUFFER_LEN		1024
 
 typedef enum _cmds_index {
 	SYSCALL_HACK = 0,
@@ -295,6 +295,7 @@ static ssize_t lde_proc_write(struct file* file, const char __user* ubuf, size_t
 
 	lde_proc_support_info_check();
 
+	data[count] = '\0';
 	cmd_idx = SYSCALL_HACK;
 	do {
 		if (strncmp(data, my_cmds_support_info[cmd_idx].name, MAX_RECEIVE_BUFFER_LEN) == 0) {
@@ -352,7 +353,7 @@ void lde_proc_remove(void)
 	}
 
 	if (my_cmds_support_info != NULL) {
-		kfree(&my_cmds_support_info);
+		kfree(my_cmds_support_info);
 	}
 
 	if (lde_proc_msg != NULL) {
